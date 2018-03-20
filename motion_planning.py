@@ -22,6 +22,11 @@ class States(Enum):
     PLANNING = auto()
 
 
+TARGET_ALTITUDE = 5
+SAFETY_DISTANCE = 5
+lat0=0
+lon0=0
+
 class MotionPlanning(Drone):
 
     def __init__(self, connection):
@@ -75,6 +80,20 @@ class MotionPlanning(Drone):
         self.flight_state = States.ARMING
         print("arming transition")
         self.arm()
+
+        self.target_position[2] = TARGET_ALTITUDE
+        # TODO: read lat0, lon0 from colliders into floating point values
+        file = open("colliders.csv","r")
+        data = file.readline()
+        x, y = data.split(",")
+        x, lat0 = x.split(" ")
+        x, x2, lon0 = y.split(" ")
+        lat0 = float(lat0)
+        lon0 = float(lon0)
+        file.close()
+        print("starting latitude, longitude",lat0,lon0) #TODO map start and goal onto valid locally defined space
+
+        self.set_home_position(lon0, lat0, TARGET_ALTITUDE)  # set the current location to be the home position
         self.take_control()
 
     def takeoff_transition(self):
@@ -114,24 +133,9 @@ class MotionPlanning(Drone):
     def plan_path(self):
         self.flight_state = States.PLANNING
         print("Searching for a path ...")
-        TARGET_ALTITUDE = 5
-        SAFETY_DISTANCE = 5
-
-        self.target_position[2] = TARGET_ALTITUDE
-
-        # TODO: read lat0, lon0 from colliders into floating point values
-        file = open("colliders.csv","r")
-        data = file.readline()
-        x, y = data.split(",")
-        x, lat0 = x.split(" ")
-        x, x2, lon0 = y.split(" ")
-        lat0 = float(lat0)
-        lon0 = float(lon0)
-        file.close()
-        print("starting latitude, longitude",lat0,lon0) #TODO map start and goal onto valid locally defined space
 
         # TODO: set home position to (lat0, lon0, 0)
-        self.set_home_position(lat0, lon0, 0)
+        #self.set_home_position(lat0, lon0, 0) This order is incorrect for Drone: definition.
         # TODO: retrieve current global position
         global_home = [lon0, lat0, 0]
         global_position = [lon0, lat0, 0]
@@ -150,7 +154,7 @@ class MotionPlanning(Drone):
         # Define starting point on the grid (this is just grid center)
         #grid_start = (-north_offset, -east_offset)
         # TODO: convert start position to current position rather than map center!!!
-        grid_start = (int(my_local_position[0]+north_offset), int(my_local_position[1]+east_offset))
+        grid_start = (int(my_local_position[0]-north_offset), int(my_local_position[1]-east_offset)) # center(0,0)
 
         # Set goal as some arbitrary position on the grid
         #grid_goal = (-north_offset + 10, -east_offset + 10)
@@ -167,10 +171,11 @@ class MotionPlanning(Drone):
         # TODO (if you're feeling ambitious): Try a different approach altogether!
 
         # Convert path to waypoints
-        waypoints = [[p[0] + north_offset, p[1] + east_offset, TARGET_ALTITUDE, 0] for p in path]
+        waypoints = [[p[0]+north_offset, p[1]+east_offset, TARGET_ALTITUDE, 0] for p in path]
         # Set self.waypoints
         self.waypoints = waypoints
         # TODO: send waypoints to sim
+
         self.send_waypoints()
 
     def start(self):

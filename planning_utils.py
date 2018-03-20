@@ -53,12 +53,12 @@ class Action(Enum):
 
     WEST = (0, -1, 1)
     EAST = (0, 1, 1)
-    NORTH = (-1, 0, 1)  # !!! orientation reversed?
-    SOUTH = (1, 0, 1)
-    NORTHEAST = (-1,1,np.sqrt(2))
-    NORTHWEST = (-1,-1,np.sqrt(2))
-    SOUTHEAST = (1,1,np.sqrt(2))
-    SOUTHWEST = (1,-1,np.sqrt(2))
+    SOUTH = (-1, 0, 1)  # !!! orientation reversed?
+    NORTH = (1, 0, 1)
+    SOUTHEAST = (-1,1,np.sqrt(2))
+    SOUTHWEST = (-1,-1,np.sqrt(2))
+    NORTHEAST= (1,1,np.sqrt(2))
+    NORTHWEST = (1,-1,np.sqrt(2))
 
     @property
     def cost(self):
