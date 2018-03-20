@@ -5,7 +5,7 @@ from enum import Enum, auto
 
 import numpy as np
 
-from planning_utils import a_star, heuristic, create_grid
+from planning_utils import a_star, heuristic, create_grid, prune_path
 from udacidrone import Drone
 from udacidrone.connection import MavlinkConnection
 from udacidrone.messaging import MsgID
@@ -21,11 +21,6 @@ class States(Enum):
     DISARMING = auto()
     PLANNING = auto()
 
-
-TARGET_ALTITUDE = 5
-SAFETY_DISTANCE = 5
-lat0=0
-lon0=0
 
 class MotionPlanning(Drone):
 
@@ -80,20 +75,6 @@ class MotionPlanning(Drone):
         self.flight_state = States.ARMING
         print("arming transition")
         self.arm()
-
-        self.target_position[2] = TARGET_ALTITUDE
-        # TODO: read lat0, lon0 from colliders into floating point values
-        file = open("colliders.csv","r")
-        data = file.readline()
-        x, y = data.split(",")
-        x, lat0 = x.split(" ")
-        x, x2, lon0 = y.split(" ")
-        lat0 = float(lat0)
-        lon0 = float(lon0)
-        file.close()
-        print("starting latitude, longitude",lat0,lon0) #TODO map start and goal onto valid locally defined space
-
-        self.set_home_position(lon0, lat0, TARGET_ALTITUDE)  # set the current location to be the home position
         self.take_control()
 
     def takeoff_transition(self):
@@ -134,6 +115,22 @@ class MotionPlanning(Drone):
         self.flight_state = States.PLANNING
         print("Searching for a path ...")
 
+        # TODO: read lat0, lon0 from colliders into floating point values
+        TARGET_ALTITUDE = 5
+        SAFETY_DISTANCE = 5
+        self.target_position[2] = TARGET_ALTITUDE
+        file = open("colliders.csv", "r")
+        data = file.readline()
+        x, y = data.split(",")
+        x, lat0 = x.split(" ")
+        x, x2, lon0 = y.split(" ")
+        lat0 = float(lat0)
+        lon0 = float(lon0)
+        file.close()
+        print("starting latitude, longitude", lat0, lon0)  # TODO map start and goal onto valid locally defined space
+
+        self.set_home_position(lon0, lat0, TARGET_ALTITUDE)  # set the current location to be the home position
+
         # TODO: set home position to (lat0, lon0, 0)
         #self.set_home_position(lat0, lon0, 0) This order is incorrect for Drone: definition.
         # TODO: retrieve current global position
@@ -158,8 +155,12 @@ class MotionPlanning(Drone):
 
         # Set goal as some arbitrary position on the grid
         #grid_goal = (-north_offset + 10, -east_offset + 10)
-        grid_goal = (grid_start[0]+10, grid_start[1]+10)
+#        grid_goal = (10-north_offset, 10-east_offset)
         # TODO: adapt to set goal as latitude / longitude position and convert!!!
+        grid_goal = global_to_local((-122.398805, 37.793372, 0), global_home) # around the corner (lon, lat, up)
+        grid_goal = (int(grid_goal[0]-north_offset), int(grid_goal[1]-east_offset))
+        while grid[grid_goal] == 1.0 :
+            grid_goal = (grid_goal[0] + 1, grid_goal[1]) # place goal to first available position north of requested
 
         # Run A* to find a path from start to goal
         # TODO: add diagonal motions with a cost of sqrt(2) to your A* implementation
@@ -169,9 +170,11 @@ class MotionPlanning(Drone):
         
         # TODO: prune path to minimize number of waypoints
         # TODO (if you're feeling ambitious): Try a different approach altogether!
+h        pruned_path = prune_path(path)
+        print('path length {0} pruned length {1} time {2}'.format(len(path), len(pruned_path), time.clock()))
 
         # Convert path to waypoints
-        waypoints = [[p[0]+north_offset, p[1]+east_offset, TARGET_ALTITUDE, 0] for p in path]
+        waypoints = [[p[0]+north_offset, p[1]+east_offset, TARGET_ALTITUDE, 0] for p in pruned_path]
         # Set self.waypoints
         self.waypoints = waypoints
         # TODO: send waypoints to sim
