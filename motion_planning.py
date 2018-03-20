@@ -155,9 +155,11 @@ class MotionPlanning(Drone):
 
         # Set goal as some arbitrary position on the grid
         #grid_goal = (-north_offset + 10, -east_offset + 10)
-#        grid_goal = (10-north_offset, 10-east_offset)
+        #grid_goal = (10-north_offset, 10-east_offset)
         # TODO: adapt to set goal as latitude / longitude position and convert!!!
-        grid_goal = global_to_local((-122.398805, 37.793372, 0), global_home) # around the corner (lon, lat, up)
+        #grid_goal = global_to_local((-122.398805, 37.793372, 0), global_home) # 1st quadrant around the corner (lon, lat, up)
+        grid_goal = global_to_local((-122.399813, 37.792259, 0), global_home) # 3rd quadrant (lon, lat, up)
+
         grid_goal = (int(grid_goal[0]-north_offset), int(grid_goal[1]-east_offset))
         while grid[grid_goal] == 1.0 :
             grid_goal = (grid_goal[0] + 1, grid_goal[1]) # place goal to first available position north of requested
@@ -170,7 +172,7 @@ class MotionPlanning(Drone):
         
         # TODO: prune path to minimize number of waypoints
         # TODO (if you're feeling ambitious): Try a different approach altogether!
-h        pruned_path = prune_path(path)
+        pruned_path = prune_path(path)
         print('path length {0} pruned length {1} time {2}'.format(len(path), len(pruned_path), time.clock()))
 
         # Convert path to waypoints
