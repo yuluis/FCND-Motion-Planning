@@ -21,7 +21,7 @@ The planning algorithm includes following:
 
 Some of these steps are already implemented for you and some you need to modify or implement yourself.  See the [rubric](https://review.udacity.com/#!/rubrics/1534/view) for specifics on what you need to modify or implement.
 
-Where a start GPS coordinate provided was outside the collider space, a randomly generated grid location is chosen.  
+Where a start GPS coordinate provided was outside the collider space, a randomly generated grid location is chosen.  The helper function valid_near_point supports this.
 
 A safety margin of 5 meters has been added during the generation of the grid in planning_utils.py procedure create_grid.
 
