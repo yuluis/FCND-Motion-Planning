@@ -5,7 +5,7 @@ from enum import Enum, auto
 
 import numpy as np
 
-from planning_utils import a_star, heuristic, create_grid, prune_path
+from planning_utils import a_star, heuristic, create_grid, prune_path, valid_near_point
 from udacidrone import Drone
 from udacidrone.connection import MavlinkConnection
 from udacidrone.messaging import MsgID
@@ -158,11 +158,14 @@ class MotionPlanning(Drone):
         #grid_goal = (10-north_offset, 10-east_offset)
         # TODO: adapt to set goal as latitude / longitude position and convert!!!
         #grid_goal = global_to_local((-122.398805, 37.793372, 0), global_home) # 1st quadrant around the corner (lon, lat, up)
-        grid_goal = global_to_local((-122.399813, 37.792259, 0), global_home) # 3rd quadrant (lon, lat, up)
+        #grid_goal = global_to_local((-122.399813, 37.792259, 0), global_home) # 3rd quadrant (lon, lat, up)
 
-        grid_goal = (int(grid_goal[0]-north_offset), int(grid_goal[1]-east_offset))
-        while grid[grid_goal] == 1.0 :
-            grid_goal = (grid_goal[0] + 1, grid_goal[1]) # place goal to first available position north of requested
+
+        grid_goal = global_to_local((-122.402224, 37.797330, 0), global_home)  # 3rd quadrant (lon, lat, up)
+        grid_goal = (int(grid_goal[0]-north_offset), int(grid_goal[1]-east_offset)) # center(0,0)
+
+        grid_goal = valid_near_point(grid, north_offset, east_offset, grid_goal, grid_start)
+
 
         # Run A* to find a path from start to goal
         # TODO: add diagonal motions with a cost of sqrt(2) to your A* implementation

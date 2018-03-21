@@ -194,3 +194,15 @@ import numpy.linalg as LA
 
 def distance(x,y):
     return LA.norm(np.array(x)-np.array(y))
+
+import random
+def valid_near_point(grid, north_offset, east_offset, grid_goal, grid_start) :
+        # move goal onto valid position inside the collider space on the ground
+        if (grid_goal[0] < 0 or grid_goal[0] > 2*north_offset-1 or
+            grid_goal[1] < 0 or grid_goal[1] > 2*east_offset-1 or
+            grid[grid_goal] == 1.0 ) :
+            grid_goal = (random.randrange(-2*north_offset), random.randrange(-2*east_offset))
+            while grid[grid_goal] == 1.0 :
+                grid_goal = (random.randrange(-2 * north_offset), random.randrange(-2 * east_offset))
+            print("goal outside collider space. will pick random goal ", grid_goal)
+        return grid_goal
